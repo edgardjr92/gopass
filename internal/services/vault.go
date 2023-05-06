@@ -9,6 +9,7 @@ import (
 	"github.com/edgardjr92/gopass/internal/keys"
 	"github.com/edgardjr92/gopass/internal/models"
 	"github.com/edgardjr92/gopass/internal/repositories"
+	"github.com/edgardjr92/gopass/internal/utils"
 )
 
 type IVaultService interface {
@@ -16,7 +17,7 @@ type IVaultService interface {
 	// It returns the ID of the newly created vault.
 	Create(ctx context.Context, name string) (uint, error)
 	// GetAll returns all vaults from a user.
-	GetAll(ctx context.Context, userID uint) ([]models.Vault, error)
+	GetAll(ctx context.Context, userID uint) ([]models.VaultDetail, error)
 }
 
 type vaultService struct {
@@ -60,4 +61,29 @@ func (v *vaultService) Create(ctx context.Context, name string) (uint, error) {
 	}
 
 	return newVault.ID, nil
+}
+
+func (v *vaultService) GetAll(ctx context.Context) ([]models.VaultDetail, error) {
+	userID, ok := ctx.Value(keys.UserIDKey).(uint)
+
+	if !ok {
+		return []models.VaultDetail{}, errors.UnauthorizedError("User is not authenticated")
+	}
+
+	vaults, err := v.repository.FindByUserID(ctx, userID)
+
+	if err != nil {
+		log.Printf("Error while trying to find all vaults by userId: %v", err.Error())
+		return []models.VaultDetail{}, err
+	}
+
+	details := utils.Map(vaults, func(v models.Vault) models.VaultDetail {
+		return models.VaultDetail{
+			ID:     v.ID,
+			Name:   v.Name,
+			UserID: v.UserID,
+		}
+	})
+
+	return details, nil
 }

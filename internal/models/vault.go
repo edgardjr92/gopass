@@ -7,3 +7,9 @@ type Vault struct {
 	Name   string
 	UserID uint
 }
+
+type VaultDetail struct {
+	ID     uint
+	Name   string
+	UserID uint
+}

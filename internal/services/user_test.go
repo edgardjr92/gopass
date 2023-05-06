@@ -13,6 +13,16 @@ import (
 	"gorm.io/gorm"
 )
 
+func TestNewUserService(t *testing.T) {
+	repoMock := &mocks.UserRepositoryMock{}
+	hasherMock := &mocks.HasherMock{}
+
+	userSvc := NewUserService(repoMock, hasherMock)
+
+	assert.Equal(t, repoMock, userSvc.repository)
+	assert.Equal(t, hasherMock, userSvc.hasher)
+}
+
 func TestCreateUser(t *testing.T) {
 	ctx := context.TODO()
 	name := "John Doe"

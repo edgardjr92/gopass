@@ -13,6 +13,14 @@ import (
 	"gorm.io/gorm"
 )
 
+func TestNewVaultService(t *testing.T) {
+	repoMock := &mocks.VaultRepositoryMock{}
+
+	vaultSvc := NewVaultService(repoMock)
+
+	assert.Equal(t, repoMock, vaultSvc.repository)
+}
+
 func TestCreateVault(t *testing.T) {
 	userID := uint(10)
 	ctx := context.WithValue(context.TODO(), keys.UserIDKey, userID)
@@ -125,4 +133,80 @@ func TestCreateVault(t *testing.T) {
 		})
 	}
 
+}
+
+func TestGetAllVaults(t *testing.T) {
+	userID := uint(10)
+	ctx := context.WithValue(context.TODO(), keys.UserIDKey, userID)
+
+	testCase := []struct {
+		mockReturn []models.Vault
+		expected   []models.VaultDetail
+	}{
+		{
+			mockReturn: []models.Vault{},
+			expected:   []models.VaultDetail{},
+		},
+		{
+			mockReturn: []models.Vault{
+				{Model: gorm.Model{ID: 1}, Name: "My Vault"},
+				{Model: gorm.Model{ID: 2}, Name: "My Vault 2"},
+			},
+			expected: []models.VaultDetail{
+				{ID: uint(1), Name: "My Vault"},
+				{ID: uint(2), Name: "My Vault 2"},
+			},
+		},
+	}
+	for _, tc := range testCase {
+		t.Run("success", func(t *testing.T) {
+			// given
+			repoMock := &mocks.VaultRepositoryMock{}
+
+			repoMock.On("FindByUserID", ctx, userID).Return(tc.mockReturn, nil)
+
+			// when
+			vaultSvc := &vaultService{repository: repoMock}
+			actual, error := vaultSvc.GetAll(ctx)
+
+			// then
+			assert.Equal(t, tc.expected, actual)
+			assert.Nil(t, error)
+
+			repoMock.AssertExpectations(t)
+		})
+	}
+
+	t.Run("user not authenticated", func(t *testing.T) {
+		// given
+		repoMock := &mocks.VaultRepositoryMock{}
+		ctx := context.TODO()
+
+		// when
+		vaultSvc := &vaultService{repository: repoMock}
+		actual, error := vaultSvc.GetAll(ctx)
+
+		// then
+		assert.Equal(t, []models.VaultDetail{}, actual)
+		assert.Equal(t, "UNAUTHORIZED_ERROR: User is not authenticated", error.Error())
+
+		repoMock.AssertExpectations(t)
+	})
+
+	t.Run("unexpected error", func(t *testing.T) {
+		// given
+		repoMock := &mocks.VaultRepositoryMock{}
+
+		repoMock.On("FindByUserID", ctx, userID).Return([]models.Vault{}, errors.New("error when finding vaults"))
+
+		// when
+		vaultSvc := &vaultService{repository: repoMock}
+		actual, error := vaultSvc.GetAll(ctx)
+
+		// then
+		assert.Equal(t, []models.VaultDetail{}, actual)
+		assert.Equal(t, "error when finding vaults", error.Error())
+
+		repoMock.AssertExpectations(t)
+	})
 }
