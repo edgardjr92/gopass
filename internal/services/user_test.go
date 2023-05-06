@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	cerrors "github.com/edgardjr92/gopass/internal/errors"
+	"github.com/edgardjr92/gopass/internal/mocks"
 	"github.com/edgardjr92/gopass/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -21,20 +22,20 @@ func TestCreateUser(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		// given
-		mockRepo := &mockRepository{}
-		mockHasher := &mockHasher{}
+		repoMock := &mocks.UserRepositoryMock{}
+		hasherMock := &mocks.HasherMock{}
 
-		mockRepo.On("FindByEmail", email).Return(&models.User{}, nil)
-		mockHasher.On("HashPsw", psw).Return("hashed-password", nil)
-		mockRepo.On(
+		repoMock.On("FindByEmail", email).Return(&models.User{}, nil)
+		hasherMock.On("HashPsw", psw).Return("hashed-password", nil)
+		repoMock.On(
 			"Save",
 			&models.User{Name: name, Email: email, Psw: "hashed-password"},
 		).Return(1, nil)
 
 		// when
 		userSvc := &userService{
-			repository: mockRepo,
-			hasher:     mockHasher,
+			repository: repoMock,
+			hasher:     hasherMock,
 		}
 		actual, error := userSvc.Create(ctx, name, email, psw, confirmPsw)
 
@@ -42,19 +43,19 @@ func TestCreateUser(t *testing.T) {
 		assert.Equal(t, 1, actual)
 		assert.Nil(t, error)
 
-		mockRepo.AssertExpectations(t)
-		mockHasher.AssertExpectations(t)
+		repoMock.AssertExpectations(t)
+		hasherMock.AssertExpectations(t)
 	})
 
 	t.Run("passwords do not match", func(t *testing.T) {
 		// given
-		mockRepo := &mockRepository{}
-		mockHasher := &mockHasher{}
+		repoMock := &mocks.UserRepositoryMock{}
+		hasherMock := &mocks.HasherMock{}
 
 		// when
 		userSvc := &userService{
-			repository: mockRepo,
-			hasher:     mockHasher,
+			repository: repoMock,
+			hasher:     hasherMock,
 		}
 		actual, error := userSvc.Create(ctx, name, email, psw, "1234567")
 
@@ -65,16 +66,16 @@ func TestCreateUser(t *testing.T) {
 
 	t.Run("user already exists", func(t *testing.T) {
 		// given
-		mockRepo := &mockRepository{}
-		mockHasher := &mockHasher{}
+		repoMock := &mocks.UserRepositoryMock{}
+		hasherMock := &mocks.HasherMock{}
 
-		mockRepo.On("FindByEmail", email).
+		repoMock.On("FindByEmail", email).
 			Return(&models.User{Model: gorm.Model{ID: 1}}, nil)
 
 		// when
 		userSvc := &userService{
-			repository: mockRepo,
-			hasher:     mockHasher,
+			repository: repoMock,
+			hasher:     hasherMock,
 		}
 		actual, error := userSvc.Create(ctx, name, email, psw, confirmPsw)
 
@@ -112,17 +113,17 @@ func TestCreateUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run("Unexpected error", func(t *testing.T) {
 			// given
-			mockRepo := &mockRepository{}
-			mockHasher := &mockHasher{}
+			repoMock := &mocks.UserRepositoryMock{}
+			hasherMock := &mocks.HasherMock{}
 
-			mockRepo.On("FindByEmail", email).Return(&models.User{}, tc.findError)
-			mockHasher.On("HashPsw", psw).Return("", tc.hashError)
-			mockRepo.On("Save", mock.Anything).Return(0, tc.saveError)
+			repoMock.On("FindByEmail", email).Return(&models.User{}, tc.findError)
+			hasherMock.On("HashPsw", psw).Return("", tc.hashError)
+			repoMock.On("Save", mock.Anything).Return(0, tc.saveError)
 
 			// when
 			userSvc := &userService{
-				repository: mockRepo,
-				hasher:     mockHasher,
+				repository: repoMock,
+				hasher:     hasherMock,
 			}
 			actual, error := userSvc.Create(ctx, name, email, psw, confirmPsw)
 
@@ -132,29 +133,4 @@ func TestCreateUser(t *testing.T) {
 		})
 	}
 
-}
-
-// Define mock repository
-type mockRepository struct {
-	mock.Mock
-}
-
-func (m *mockRepository) FindByEmail(email string) (*models.User, error) {
-	args := m.Called(email)
-	return args.Get(0).(*models.User), args.Error(1)
-}
-
-func (m *mockRepository) Save(user *models.User) (int, error) {
-	args := m.Called(user)
-	return args.Int(0), args.Error(1)
-}
-
-// Define mock hasher
-type mockHasher struct {
-	mock.Mock
-}
-
-func (m *mockHasher) HashPsw(psw string) (string, error) {
-	args := m.Called(psw)
-	return args.String(0), args.Error(1)
 }
