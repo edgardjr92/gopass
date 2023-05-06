@@ -13,7 +13,7 @@ import (
 type IUserService interface {
 	// Create creates a new user.
 	// It returns the ID of the newly created user.
-	Create(ctx context.Context, name, email, psw, confirmPsw string) (int, error)
+	Create(ctx context.Context, name, email, psw, confirmPsw string) (uint, error)
 }
 
 type userService struct {
@@ -25,7 +25,7 @@ func NewUserService(repository repositories.IUserRepository, hasher hash.Hasher)
 	return &userService{repository, hasher}
 }
 
-func (u *userService) Create(ctx context.Context, name, email, psw, confirmPsw string) (int, error) {
+func (u *userService) Create(ctx context.Context, name, email, psw, confirmPsw string) (uint, error) {
 	if psw != confirmPsw {
 		return 0, errors.UnprocessableError("Passwords do not match")
 	}
@@ -54,5 +54,10 @@ func (u *userService) Create(ctx context.Context, name, email, psw, confirmPsw s
 		Psw:   hashedPsw,
 	}
 
-	return u.repository.Save(&newUser)
+	if err := u.repository.Save(&newUser); err != nil {
+		log.Printf("Error while trying to save user: %v", err.Error())
+		return 0, err
+	}
+
+	return newUser.ID, nil
 }

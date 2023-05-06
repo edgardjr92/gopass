@@ -8,8 +8,3 @@ type User struct {
 	Email string
 	Psw   string
 }
-
-type UserDetail struct {
-	Name  string
-	Email string
-}

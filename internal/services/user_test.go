@@ -25,22 +25,21 @@ func TestCreateUser(t *testing.T) {
 		repoMock := &mocks.UserRepositoryMock{}
 		hasherMock := &mocks.HasherMock{}
 
+		newUser := &models.User{Name: name, Email: email, Psw: "hashed-password"}
+
 		repoMock.On("FindByEmail", email).Return(&models.User{}, nil)
 		hasherMock.On("HashPsw", psw).Return("hashed-password", nil)
-		repoMock.On(
-			"Save",
-			&models.User{Name: name, Email: email, Psw: "hashed-password"},
-		).Return(1, nil)
+		repoMock.On("Save", newUser).Run(func(args mock.Arguments) {
+			user := args.Get(0).(*models.User)
+			user.ID = uint(1)
+		})
 
 		// when
-		userSvc := &userService{
-			repository: repoMock,
-			hasher:     hasherMock,
-		}
+		userSvc := &userService{repository: repoMock, hasher: hasherMock}
 		actual, error := userSvc.Create(ctx, name, email, psw, confirmPsw)
 
 		// then
-		assert.Equal(t, 1, actual)
+		assert.Equal(t, uint(1), actual)
 		assert.Nil(t, error)
 
 		repoMock.AssertExpectations(t)
@@ -53,14 +52,11 @@ func TestCreateUser(t *testing.T) {
 		hasherMock := &mocks.HasherMock{}
 
 		// when
-		userSvc := &userService{
-			repository: repoMock,
-			hasher:     hasherMock,
-		}
+		userSvc := &userService{repository: repoMock, hasher: hasherMock}
 		actual, error := userSvc.Create(ctx, name, email, psw, "1234567")
 
 		// then
-		assert.Equal(t, 0, actual)
+		assert.Equal(t, uint(0), actual)
 		assert.Equal(t, error, cerrors.UnprocessableError("Passwords do not match"))
 	})
 
@@ -73,14 +69,11 @@ func TestCreateUser(t *testing.T) {
 			Return(&models.User{Model: gorm.Model{ID: 1}}, nil)
 
 		// when
-		userSvc := &userService{
-			repository: repoMock,
-			hasher:     hasherMock,
-		}
+		userSvc := &userService{repository: repoMock, hasher: hasherMock}
 		actual, error := userSvc.Create(ctx, name, email, psw, confirmPsw)
 
 		// then
-		assert.Equal(t, 0, actual)
+		assert.Equal(t, uint(0), actual)
 		assert.Equal(t, error, cerrors.ConflictError("User already exists"))
 	})
 
@@ -111,25 +104,22 @@ func TestCreateUser(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run("Unexpected error", func(t *testing.T) {
+		t.Run("unexpected error", func(t *testing.T) {
 			// given
 			repoMock := &mocks.UserRepositoryMock{}
 			hasherMock := &mocks.HasherMock{}
 
 			repoMock.On("FindByEmail", email).Return(&models.User{}, tc.findError)
 			hasherMock.On("HashPsw", psw).Return("", tc.hashError)
-			repoMock.On("Save", mock.Anything).Return(0, tc.saveError)
+			repoMock.On("Save", mock.Anything).Return(tc.saveError)
 
 			// when
-			userSvc := &userService{
-				repository: repoMock,
-				hasher:     hasherMock,
-			}
+			userSvc := &userService{repository: repoMock, hasher: hasherMock}
 			actual, error := userSvc.Create(ctx, name, email, psw, confirmPsw)
 
 			// then
-			assert.Equal(t, 0, actual)
-			assert.Equal(t, error, tc.expectedError)
+			assert.Equal(t, uint(0), actual)
+			assert.Equal(t, tc.expectedError, error)
 		})
 	}
 

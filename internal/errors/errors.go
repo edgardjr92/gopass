@@ -66,3 +66,23 @@ func (e *unauthorizedError) Error() string {
 func (e *unauthorizedError) Status() int {
 	return e.code
 }
+
+type badRequestError struct {
+	code    int
+	message string
+}
+
+func BadRequestError(message string) *badRequestError {
+	return &badRequestError{
+		code:    400,
+		message: message,
+	}
+}
+
+func (e *badRequestError) Error() string {
+	return fmt.Sprintf("BAD_REQUEST_ERROR: %s", e.message)
+}
+
+func (e *badRequestError) Status() int {
+	return e.code
+}

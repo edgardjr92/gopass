@@ -15,7 +15,11 @@ func (m *UserRepositoryMock) FindByEmail(email string) (*models.User, error) {
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *UserRepositoryMock) Save(user *models.User) (int, error) {
+func (m *UserRepositoryMock) Save(user *models.User) error {
 	args := m.Called(user)
-	return args.Int(0), args.Error(1)
+	if len(args) > 0 {
+		err, _ := args[0].(error)
+		return err
+	}
+	return nil
 }
