@@ -46,3 +46,23 @@ func (e *unprocessableError) Error() string {
 func (e *unprocessableError) Status() int {
 	return e.code
 }
+
+type unauthorizedError struct {
+	code    int
+	message string
+}
+
+func UnauthorizedError(message string) *unauthorizedError {
+	return &unauthorizedError{
+		code:    401,
+		message: message,
+	}
+}
+
+func (e *unauthorizedError) Error() string {
+	return fmt.Sprintf("UNAUTHORIZED_ERROR: %s", e.message)
+}
+
+func (e *unauthorizedError) Status() int {
+	return e.code
+}
