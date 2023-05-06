@@ -27,10 +27,10 @@ func TestCreateUser(t *testing.T) {
 
 		newUser := &models.User{Name: name, Email: email, Psw: "hashed-password"}
 
-		repoMock.On("FindByEmail", email).Return(&models.User{}, nil)
+		repoMock.On("FindByEmail", ctx, email).Return(&models.User{}, nil)
 		hasherMock.On("HashPsw", psw).Return("hashed-password", nil)
-		repoMock.On("Save", newUser).Run(func(args mock.Arguments) {
-			user := args.Get(0).(*models.User)
+		repoMock.On("Save", ctx, newUser).Run(func(args mock.Arguments) {
+			user := args.Get(1).(*models.User)
 			user.ID = uint(1)
 		})
 
@@ -65,7 +65,7 @@ func TestCreateUser(t *testing.T) {
 		repoMock := &mocks.UserRepositoryMock{}
 		hasherMock := &mocks.HasherMock{}
 
-		repoMock.On("FindByEmail", email).
+		repoMock.On("FindByEmail", ctx, email).
 			Return(&models.User{Model: gorm.Model{ID: 1}}, nil)
 
 		// when
@@ -109,9 +109,9 @@ func TestCreateUser(t *testing.T) {
 			repoMock := &mocks.UserRepositoryMock{}
 			hasherMock := &mocks.HasherMock{}
 
-			repoMock.On("FindByEmail", email).Return(&models.User{}, tc.findError)
+			repoMock.On("FindByEmail", ctx, email).Return(&models.User{}, tc.findError)
 			hasherMock.On("HashPsw", psw).Return("", tc.hashError)
-			repoMock.On("Save", mock.Anything).Return(tc.saveError)
+			repoMock.On("Save", ctx, mock.Anything).Return(tc.saveError)
 
 			// when
 			userSvc := &userService{repository: repoMock, hasher: hasherMock}

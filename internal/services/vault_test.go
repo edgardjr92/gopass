@@ -15,22 +15,22 @@ import (
 
 func TestCreateVault(t *testing.T) {
 	userID := uint(10)
-	cxt := context.WithValue(context.TODO(), keys.UserIDKey, userID)
+	ctx := context.WithValue(context.TODO(), keys.UserIDKey, userID)
 	name := "My Vault"
 
 	t.Run("success", func(t *testing.T) {
 		// given
 		repoMock := &mocks.VaultRepositoryMock{}
 
-		repoMock.On("FindByNameAndUserID", name, userID).Return(&models.Vault{}, nil)
-		repoMock.On("Save", &models.Vault{Name: name, UserID: userID}).Run(func(args mock.Arguments) {
-			vault := args.Get(0).(*models.Vault)
+		repoMock.On("FindByNameAndUserID", ctx, name, userID).Return(&models.Vault{}, nil)
+		repoMock.On("Save", ctx, &models.Vault{Name: name, UserID: userID}).Run(func(args mock.Arguments) {
+			vault := args.Get(1).(*models.Vault)
 			vault.ID = uint(100)
 		})
 
 		// when
 		vaultSvc := &vaultService{repository: repoMock}
-		actual, error := vaultSvc.Create(cxt, name)
+		actual, error := vaultSvc.Create(ctx, name)
 
 		// then
 		assert.Equal(t, uint(100), actual)
@@ -42,11 +42,11 @@ func TestCreateVault(t *testing.T) {
 	t.Run("user not authenticated", func(t *testing.T) {
 		// given
 		repoMock := &mocks.VaultRepositoryMock{}
-		cxt := context.TODO()
+		ctx := context.TODO()
 
 		// when
 		vaultSvc := &vaultService{repository: repoMock}
-		actual, error := vaultSvc.Create(cxt, name)
+		actual, error := vaultSvc.Create(ctx, name)
 
 		// then
 		assert.Equal(t, uint(0), actual)
@@ -63,7 +63,7 @@ func TestCreateVault(t *testing.T) {
 
 			// when
 			vaultSvc := &vaultService{repository: repoMock}
-			actual, error := vaultSvc.Create(cxt, n)
+			actual, error := vaultSvc.Create(ctx, n)
 
 			// then
 			assert.Equal(t, uint(0), actual)
@@ -77,12 +77,12 @@ func TestCreateVault(t *testing.T) {
 		// given
 		repoMock := &mocks.VaultRepositoryMock{}
 
-		repoMock.On("FindByNameAndUserID", name, userID).
+		repoMock.On("FindByNameAndUserID", ctx, name, userID).
 			Return(&models.Vault{Model: gorm.Model{ID: 1}}, nil)
 
 		// when
 		vaultSvc := &vaultService{repository: repoMock}
-		actual, error := vaultSvc.Create(cxt, name)
+		actual, error := vaultSvc.Create(ctx, name)
 
 		// then
 		assert.Equal(t, uint(0), actual)
@@ -112,12 +112,12 @@ func TestCreateVault(t *testing.T) {
 			// given
 			repoMock := &mocks.VaultRepositoryMock{}
 
-			repoMock.On("FindByNameAndUserID", name, userID).Return(&models.Vault{}, tc.findByNameAndUserIDError)
-			repoMock.On("Save", mock.Anything).Return(tc.saveError)
+			repoMock.On("FindByNameAndUserID", ctx, name, userID).Return(&models.Vault{}, tc.findByNameAndUserIDError)
+			repoMock.On("Save", ctx, mock.Anything).Return(tc.saveError)
 
 			// when
 			vaultSvc := &vaultService{repository: repoMock}
-			actual, error := vaultSvc.Create(cxt, name)
+			actual, error := vaultSvc.Create(ctx, name)
 
 			// then
 			assert.Equal(t, uint(0), actual)

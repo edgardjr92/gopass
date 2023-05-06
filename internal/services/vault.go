@@ -15,6 +15,8 @@ type IVaultService interface {
 	// Create creates a new vault.
 	// It returns the ID of the newly created vault.
 	Create(ctx context.Context, name string) (uint, error)
+	// GetAll returns all vaults from a user.
+	GetAll(ctx context.Context, userID uint) ([]models.Vault, error)
 }
 
 type vaultService struct {
@@ -36,7 +38,7 @@ func (v *vaultService) Create(ctx context.Context, name string) (uint, error) {
 		return 0, errors.BadRequestError("name is required")
 	}
 
-	vault, err := v.repository.FindByNameAndUserID(name, userID)
+	vault, err := v.repository.FindByNameAndUserID(ctx, name, userID)
 
 	if err != nil {
 		log.Printf("Error while trying to find a vault by name,userId: %v", err.Error())
@@ -52,7 +54,7 @@ func (v *vaultService) Create(ctx context.Context, name string) (uint, error) {
 		UserID: userID,
 	}
 
-	if err := v.repository.Save(&newVault); err != nil {
+	if err := v.repository.Save(ctx, &newVault); err != nil {
 		log.Printf("Error while trying to save vault: %v", err.Error())
 		return 0, err
 	}

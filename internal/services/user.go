@@ -30,7 +30,7 @@ func (u *userService) Create(ctx context.Context, name, email, psw, confirmPsw s
 		return 0, errors.UnprocessableError("Passwords do not match")
 	}
 
-	user, err := u.repository.FindByEmail(email)
+	user, err := u.repository.FindByEmail(ctx, email)
 
 	if err != nil {
 		log.Printf("Error while trying to find user by email: %v", err.Error())
@@ -54,7 +54,7 @@ func (u *userService) Create(ctx context.Context, name, email, psw, confirmPsw s
 		Psw:   hashedPsw,
 	}
 
-	if err := u.repository.Save(&newUser); err != nil {
+	if err := u.repository.Save(ctx, &newUser); err != nil {
 		log.Printf("Error while trying to save user: %v", err.Error())
 		return 0, err
 	}
