@@ -35,3 +35,26 @@ func TestMap(t *testing.T) {
 		assert.Equal(t, expected, result)
 	})
 }
+
+func TestIsBlank(t *testing.T) {
+	testCases := []struct {
+		name     string
+		str      string
+		expected bool
+	}{
+		{"empty string", "", true},
+		{"blank string", " ", true},
+		{"not blank string", "a", false},
+		{"not blank string with space", " a", false},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.str, func(t *testing.T) {
+			// when
+			result := IsBlank(tc.str)
+
+			// then
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}

@@ -60,7 +60,7 @@ func UnauthorizedError(message string) *unauthorizedError {
 }
 
 func (e *unauthorizedError) Error() string {
-	return fmt.Sprintf("UNAUTHORIZED_ERROR: %s", e.message)
+	return fmt.Sprintf("UNAUTHORIZED: %s", e.message)
 }
 
 func (e *unauthorizedError) Status() int {
@@ -80,7 +80,7 @@ func BadRequestError(message string) *badRequestError {
 }
 
 func (e *badRequestError) Error() string {
-	return fmt.Sprintf("BAD_REQUEST_ERROR: %s", e.message)
+	return fmt.Sprintf("BAD_REQUEST: %s", e.message)
 }
 
 func (e *badRequestError) Status() int {

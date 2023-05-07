@@ -1,5 +1,9 @@
 package utils
 
+import (
+	"strings"
+)
+
 // Map is a generic function that receives an array and a function.
 // It applies the function to each element of the array and returns a new array.
 // Example:
@@ -17,4 +21,10 @@ func Map[T any, U any](arr []T, f func(T) U) []U {
 	}
 
 	return result
+}
+
+// IsBlank checks if a string is blank.
+// A string is considered blank if it is empty or contains only spaces.
+func IsBlank(s string) bool {
+	return strings.TrimSpace(s) == ""
 }

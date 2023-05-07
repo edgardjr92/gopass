@@ -58,7 +58,7 @@ func TestCreateVault(t *testing.T) {
 
 		// then
 		assert.Equal(t, uint(0), actual)
-		assert.Equal(t, "UNAUTHORIZED_ERROR: User is not authenticated", error.Error())
+		assert.Equal(t, "UNAUTHORIZED: User is not authenticated", error.Error())
 
 		repoMock.AssertExpectations(t)
 	})
@@ -75,7 +75,7 @@ func TestCreateVault(t *testing.T) {
 
 			// then
 			assert.Equal(t, uint(0), actual)
-			assert.Equal(t, "BAD_REQUEST_ERROR: name is required", error.Error())
+			assert.Equal(t, "BAD_REQUEST: name is required", error.Error())
 
 			repoMock.AssertExpectations(t)
 		})
@@ -188,7 +188,7 @@ func TestGetAllVaults(t *testing.T) {
 
 		// then
 		assert.Equal(t, []models.VaultDetail{}, actual)
-		assert.Equal(t, "UNAUTHORIZED_ERROR: User is not authenticated", error.Error())
+		assert.Equal(t, "UNAUTHORIZED: User is not authenticated", error.Error())
 
 		repoMock.AssertExpectations(t)
 	})

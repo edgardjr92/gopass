@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/edgardjr92/gopass/internal/errors"
 	"github.com/edgardjr92/gopass/internal/keys"
@@ -35,7 +34,7 @@ func (v *vaultService) Create(ctx context.Context, name string) (uint, error) {
 		return 0, errors.UnauthorizedError("User is not authenticated")
 	}
 
-	if strings.TrimSpace(name) == "" {
+	if utils.IsBlank(name) {
 		return 0, errors.BadRequestError("name is required")
 	}
 
