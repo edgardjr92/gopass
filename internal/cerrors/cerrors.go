@@ -1,86 +1,66 @@
 package cerrors
 
-type ApplicationError interface {
-	Status() int
-	Error() string
+type ApplicationError struct {
+	code    int
+	message string
+}
+
+func (e ApplicationError) Error() string {
+	return e.message
+}
+
+func (e ApplicationError) Code() int {
+	return e.code
 }
 
 type conflictError struct {
-	code    int
-	message string
+	ApplicationError
 }
 
 func ConflictError(message string) *conflictError {
 	return &conflictError{
-		code:    409,
-		message: message,
+		ApplicationError: ApplicationError{
+			code:    409,
+			message: message,
+		},
 	}
 }
 
-func (e *conflictError) Error() string {
-	return e.message
-}
-
-func (e *conflictError) Status() int {
-	return e.code
-}
-
 type unprocessableError struct {
-	code    int
-	message string
+	ApplicationError
 }
 
 func UnprocessableError(message string) *unprocessableError {
 	return &unprocessableError{
-		code:    422,
-		message: message,
+		ApplicationError: ApplicationError{
+			code:    422,
+			message: message,
+		},
 	}
 }
 
-func (e *unprocessableError) Error() string {
-	return e.message
-}
-
-func (e *unprocessableError) Status() int {
-	return e.code
-}
-
 type unauthorizedError struct {
-	code    int
-	message string
+	ApplicationError
 }
 
 func UnauthorizedError(message string) *unauthorizedError {
 	return &unauthorizedError{
-		code:    401,
-		message: message,
+		ApplicationError: ApplicationError{
+			code:    401,
+			message: message,
+		},
 	}
 }
 
-func (e *unauthorizedError) Error() string {
-	return e.message
-}
-
-func (e *unauthorizedError) Status() int {
-	return e.code
-}
-
 type badRequestError struct {
-	code    int
-	message string
+	ApplicationError
 }
 
 func BadRequestError(message string) *badRequestError {
 	return &badRequestError{
-		code:    400,
-		message: message,
+		ApplicationError: ApplicationError{
+			code:    400,
+			message: message,
+		},
 	}
-}
-
-func (e *badRequestError) Error() string {
-	return e.message
-}
-
-func (e *badRequestError) Status() int {
-	return e.code
 }
