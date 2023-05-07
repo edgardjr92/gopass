@@ -1,6 +1,4 @@
-package errors
-
-import "fmt"
+package cerrors
 
 type ApplicationError interface {
 	Status() int
@@ -20,7 +18,7 @@ func ConflictError(message string) *conflictError {
 }
 
 func (e *conflictError) Error() string {
-	return fmt.Sprintf("RESOURCE_ALREADY_EXISTS: %s", e.message)
+	return e.message
 }
 
 func (e *conflictError) Status() int {
@@ -40,7 +38,7 @@ func UnprocessableError(message string) *unprocessableError {
 }
 
 func (e *unprocessableError) Error() string {
-	return fmt.Sprintf("UNPROCESSABLE_ENTITY: %s", e.message)
+	return e.message
 }
 
 func (e *unprocessableError) Status() int {
@@ -60,7 +58,7 @@ func UnauthorizedError(message string) *unauthorizedError {
 }
 
 func (e *unauthorizedError) Error() string {
-	return fmt.Sprintf("UNAUTHORIZED: %s", e.message)
+	return e.message
 }
 
 func (e *unauthorizedError) Status() int {
@@ -80,7 +78,7 @@ func BadRequestError(message string) *badRequestError {
 }
 
 func (e *badRequestError) Error() string {
-	return fmt.Sprintf("BAD_REQUEST: %s", e.message)
+	return e.message
 }
 
 func (e *badRequestError) Status() int {

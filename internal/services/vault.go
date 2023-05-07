@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/edgardjr92/gopass/internal/errors"
+	"github.com/edgardjr92/gopass/internal/cerrors"
 	"github.com/edgardjr92/gopass/internal/keys"
 	"github.com/edgardjr92/gopass/internal/models"
 	"github.com/edgardjr92/gopass/internal/repositories"
@@ -31,22 +31,22 @@ func (v *vaultService) Create(ctx context.Context, name string) (uint, error) {
 	userID, ok := ctx.Value(keys.UserIDKey).(uint)
 
 	if !ok {
-		return 0, errors.UnauthorizedError("User is not authenticated")
+		return 0, cerrors.UnauthorizedError("user is not authenticated")
 	}
 
 	if utils.IsBlank(name) {
-		return 0, errors.BadRequestError("name is required")
+		return 0, cerrors.BadRequestError("name is required")
 	}
 
 	vault, err := v.repository.FindByNameAndUserID(ctx, name, userID)
 
 	if err != nil {
-		log.Printf("Error while trying to find a vault by name,userId: %v", err.Error())
+		log.Printf("error while trying to find a vault by name,userId: %v", err.Error())
 		return 0, err
 	}
 
 	if vault.ID != 0 {
-		return 0, errors.ConflictError("Vault already exists")
+		return 0, cerrors.ConflictError("vault already exists")
 	}
 
 	newVault := models.Vault{
@@ -55,7 +55,7 @@ func (v *vaultService) Create(ctx context.Context, name string) (uint, error) {
 	}
 
 	if err := v.repository.Save(ctx, &newVault); err != nil {
-		log.Printf("Error while trying to save vault: %v", err.Error())
+		log.Printf("error while trying to save vault: %v", err.Error())
 		return 0, err
 	}
 
@@ -66,13 +66,13 @@ func (v *vaultService) GetAll(ctx context.Context) ([]models.VaultDetail, error)
 	userID, ok := ctx.Value(keys.UserIDKey).(uint)
 
 	if !ok {
-		return []models.VaultDetail{}, errors.UnauthorizedError("User is not authenticated")
+		return []models.VaultDetail{}, cerrors.UnauthorizedError("user is not authenticated")
 	}
 
 	vaults, err := v.repository.FindByUserID(ctx, userID)
 
 	if err != nil {
-		log.Printf("Error while trying to find all vaults by userId: %v", err.Error())
+		log.Printf("error while trying to find all vaults by userId: %v", err.Error())
 		return []models.VaultDetail{}, err
 	}
 

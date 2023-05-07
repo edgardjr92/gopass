@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/edgardjr92/gopass/internal/errors"
+	"github.com/edgardjr92/gopass/internal/cerrors"
 	"github.com/edgardjr92/gopass/internal/models"
 	"github.com/edgardjr92/gopass/internal/repositories"
 	"github.com/edgardjr92/gopass/pkg/hash"
@@ -27,24 +27,24 @@ func NewUserService(repository repositories.IUserRepository, hasher hash.Hasher)
 
 func (u *userService) Create(ctx context.Context, name, email, psw, confirmPsw string) (uint, error) {
 	if psw != confirmPsw {
-		return 0, errors.UnprocessableError("Passwords do not match")
+		return 0, cerrors.UnprocessableError("passwords do not match")
 	}
 
 	user, err := u.repository.FindByEmail(ctx, email)
 
 	if err != nil {
-		log.Printf("Error while trying to find user by email: %v", err.Error())
+		log.Printf("error while trying to find user by email: %v", err.Error())
 		return 0, err
 	}
 
 	if user.ID != 0 {
-		return 0, errors.ConflictError("User already exists")
+		return 0, cerrors.ConflictError("user already exists")
 	}
 
 	hashedPsw, err := u.hasher.HashPsw(psw)
 
 	if err != nil {
-		log.Printf("Error while trying to hash password: %v", err.Error())
+		log.Printf("error while trying to hash password: %v", err.Error())
 		return 0, err
 	}
 
@@ -55,7 +55,7 @@ func (u *userService) Create(ctx context.Context, name, email, psw, confirmPsw s
 	}
 
 	if err := u.repository.Save(ctx, &newUser); err != nil {
-		log.Printf("Error while trying to save user: %v", err.Error())
+		log.Printf("error while trying to save user: %v", err.Error())
 		return 0, err
 	}
 

@@ -32,7 +32,7 @@ func TestLogin(t *testing.T) {
 	email := "test@test.com"
 	psw := "hashed-password"
 
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 
 	clockMock := clock.Clock{
 		NowFn: func() time.Time {
@@ -86,7 +86,7 @@ func TestLogin(t *testing.T) {
 
 			// then
 			assert.Equal(t, "", actual)
-			assert.Equal(t, fmt.Sprintf("BAD_REQUEST: %s", arg.err), error.Error())
+			assert.Equal(t, arg.err, error.Error())
 		})
 	}
 
@@ -103,7 +103,7 @@ func TestLogin(t *testing.T) {
 
 		// then
 		assert.Equal(t, "", actual)
-		assert.Equal(t, "UNAUTHORIZED: invalid credentials", error.Error())
+		assert.Equal(t, "invalid credentials", error.Error())
 	})
 
 	t.Run("invalid password", func(t *testing.T) {
@@ -120,7 +120,7 @@ func TestLogin(t *testing.T) {
 
 		// then
 		assert.Equal(t, "", actual)
-		assert.Equal(t, "UNAUTHORIZED: invalid credentials", error.Error())
+		assert.Equal(t, "invalid credentials", error.Error())
 	})
 
 	testCases := []struct {

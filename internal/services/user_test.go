@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	cerrors "github.com/edgardjr92/gopass/internal/errors"
+	"github.com/edgardjr92/gopass/internal/cerrors"
 	"github.com/edgardjr92/gopass/internal/mocks"
 	"github.com/edgardjr92/gopass/internal/models"
 	"github.com/stretchr/testify/assert"
@@ -67,7 +67,7 @@ func TestCreateUser(t *testing.T) {
 
 		// then
 		assert.Equal(t, uint(0), actual)
-		assert.Equal(t, error, cerrors.UnprocessableError("Passwords do not match"))
+		assert.Equal(t, error, cerrors.UnprocessableError("passwords do not match"))
 	})
 
 	t.Run("user already exists", func(t *testing.T) {
@@ -84,7 +84,7 @@ func TestCreateUser(t *testing.T) {
 
 		// then
 		assert.Equal(t, uint(0), actual)
-		assert.Equal(t, error, cerrors.ConflictError("User already exists"))
+		assert.Equal(t, error, cerrors.ConflictError("user already exists"))
 	})
 
 	testCases := []struct {

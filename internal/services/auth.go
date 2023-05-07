@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/edgardjr92/gopass/internal/errors"
+	"github.com/edgardjr92/gopass/internal/cerrors"
 	"github.com/edgardjr92/gopass/internal/repositories"
 	"github.com/edgardjr92/gopass/internal/utils"
 	"github.com/edgardjr92/gopass/pkg/clock"
@@ -30,28 +30,28 @@ func NewAuthService(jwt jwt.JWTGenerator, repository repositories.IUserRepositor
 
 func (a *authService) Login(ctx context.Context, email, psw string) (string, error) {
 	if utils.IsBlank(email) {
-		return "", errors.BadRequestError("email is required")
+		return "", cerrors.BadRequestError("email is required")
 	}
 
 	if utils.IsBlank(psw) {
-		return "", errors.BadRequestError("password is required")
+		return "", cerrors.BadRequestError("password is required")
 	}
 
 	user, err := a.repository.FindByEmail(ctx, email)
 
 	if err != nil {
-		log.Printf("Error while trying to find user by email: %v", err.Error())
+		log.Printf("error while trying to find user by email: %v", err.Error())
 		return "", err
 	}
 
 	if user.ID == 0 || user.Psw != psw {
-		return "", errors.UnauthorizedError("invalid credentials")
+		return "", cerrors.UnauthorizedError("invalid credentials")
 	}
 
 	token, err := a.jwt.Generate(user.ID, a.clock.Now().Add(24*time.Hour))
 
 	if err != nil {
-		log.Printf("Error while trying to generate JWT token: %v", err.Error())
+		log.Printf("error while trying to generate JWT token: %v", err.Error())
 		return "", err
 	}
 
