@@ -15,7 +15,7 @@ import (
 type IAuthService interface {
 	// Login authenticates a user.
 	// It returns the JWT token string or an error if the user could not be authenticated.
-	Login(ctx context.Context, email, psw string) (string, error)
+	Login(ctx context.Context, email, authKey string) (string, error)
 }
 
 type authService struct {
@@ -28,13 +28,13 @@ func NewAuthService(jwt jwt.JWTGenerator, repository repositories.IUserRepositor
 	return &authService{jwt, clock, repository}
 }
 
-func (a *authService) Login(ctx context.Context, email, psw string) (string, error) {
+func (a *authService) Login(ctx context.Context, email, authKey string) (string, error) {
 	if utils.IsBlank(email) {
 		return "", cerrors.BadRequestError("email is required")
 	}
 
-	if utils.IsBlank(psw) {
-		return "", cerrors.BadRequestError("password is required")
+	if utils.IsBlank(authKey) {
+		return "", cerrors.BadRequestError("authKey is required")
 	}
 
 	user, err := a.repository.FindByEmail(ctx, email)
@@ -44,7 +44,7 @@ func (a *authService) Login(ctx context.Context, email, psw string) (string, err
 		return "", err
 	}
 
-	if user.ID == 0 || user.Psw != psw {
+	if user.ID == 0 || user.AuthKey != authKey {
 		return "", cerrors.UnauthorizedError("invalid credentials")
 	}
 

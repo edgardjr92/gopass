@@ -30,7 +30,7 @@ func TestNewAuthService(t *testing.T) {
 func TestLogin(t *testing.T) {
 	ctx := context.TODO()
 	email := "test@test.com"
-	psw := "hashed-password"
+	authKey := "hashed-auth-key"
 
 	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 
@@ -46,14 +46,14 @@ func TestLogin(t *testing.T) {
 		repoMock := &mocks.UserRepositoryMock{}
 
 		repoMock.On("FindByEmail", ctx, email).
-			Return(&models.User{Model: gorm.Model{ID: 1}, Psw: "hashed-password"}, nil)
+			Return(&models.User{Model: gorm.Model{ID: 1}, AuthKey: authKey}, nil)
 
 		tomorrow := time.Date(2023, 5, 7, 0, 0, 0, 0, time.UTC)
 		jwtMock.On("Generate", uint(1), tomorrow).Return(token, nil)
 
 		// when
 		authSrv := &authService{jwtMock, clockMock, repoMock}
-		actual, error := authSrv.Login(ctx, email, psw)
+		actual, error := authSrv.Login(ctx, email, authKey)
 
 		// then
 		assert.Equal(t, token, actual)
@@ -64,15 +64,15 @@ func TestLogin(t *testing.T) {
 	})
 
 	args := []struct {
-		name  string
-		email string
-		psw   string
-		err   string
+		name    string
+		email   string
+		authKey string
+		err     string
 	}{
-		{"empty email", "", "hashed-password", "email is required"},
-		{"blank email", "   ", "hashed-password", "email is required"},
-		{"empty password", "test@test.com", "", "password is required"},
-		{"blank password", "test@test.com", "   ", "password is required"},
+		{"empty email", "", "hashed-auth-key", "email is required"},
+		{"blank email", "   ", "hashed-auth-key", "email is required"},
+		{"empty password", "test@test.com", "", "authKey is required"},
+		{"blank password", "test@test.com", "   ", "authKey is required"},
 	}
 	for _, arg := range args {
 		t.Run(arg.name, func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestLogin(t *testing.T) {
 
 			// when
 			authSrv := &authService{jwtMock, clockMock, repoMock}
-			actual, error := authSrv.Login(ctx, arg.email, arg.psw)
+			actual, error := authSrv.Login(ctx, arg.email, arg.authKey)
 
 			// then
 			assert.Equal(t, "", actual)
@@ -99,24 +99,24 @@ func TestLogin(t *testing.T) {
 
 		// when
 		authSrv := &authService{jwtMock, clockMock, repoMock}
-		actual, error := authSrv.Login(ctx, email, psw)
+		actual, error := authSrv.Login(ctx, email, authKey)
 
 		// then
 		assert.Equal(t, "", actual)
 		assert.Equal(t, "invalid credentials", error.Error())
 	})
 
-	t.Run("invalid password", func(t *testing.T) {
+	t.Run("invalid authKey", func(t *testing.T) {
 		// given
 		jwtMock := &mocks.JWTGeneratorMock{}
 		repoMock := &mocks.UserRepositoryMock{}
 
 		repoMock.On("FindByEmail", ctx, email).
-			Return(&models.User{Model: gorm.Model{ID: 1}, Psw: "hashed-password"}, nil)
+			Return(&models.User{Model: gorm.Model{ID: 1}, AuthKey: authKey}, nil)
 
 		// when
 		authSrv := &authService{jwtMock, clockMock, repoMock}
-		actual, error := authSrv.Login(ctx, email, "invalid-password")
+		actual, error := authSrv.Login(ctx, email, "invalid-auth-key")
 
 		// then
 		assert.Equal(t, "", actual)
@@ -149,13 +149,13 @@ func TestLogin(t *testing.T) {
 			repoMock := &mocks.UserRepositoryMock{}
 
 			repoMock.On("FindByEmail", ctx, email).
-				Return(&models.User{Model: gorm.Model{ID: 1}, Psw: psw}, tc.findByEmailError)
+				Return(&models.User{Model: gorm.Model{ID: 1}, AuthKey: authKey}, tc.findByEmailError)
 
 			jwtMock.On("Generate", uint(1), mock.Anything).Return("", tc.generateError)
 
 			// when
 			authSrv := &authService{jwtMock, clockMock, repoMock}
-			actual, error := authSrv.Login(ctx, email, psw)
+			actual, error := authSrv.Login(ctx, email, authKey)
 
 			// then
 			assert.Equal(t, "", actual)

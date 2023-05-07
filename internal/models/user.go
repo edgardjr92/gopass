@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	Name  string
-	Email string
-	Psw   string
+	Name    string
+	Email   string
+	AuthKey string
 }

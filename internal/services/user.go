@@ -7,13 +7,14 @@ import (
 	"github.com/edgardjr92/gopass/internal/cerrors"
 	"github.com/edgardjr92/gopass/internal/models"
 	"github.com/edgardjr92/gopass/internal/repositories"
+	"github.com/edgardjr92/gopass/internal/utils"
 	"github.com/edgardjr92/gopass/pkg/hash"
 )
 
 type IUserService interface {
 	// Create creates a new user.
 	// It returns the ID of the newly created user.
-	Create(ctx context.Context, name, email, psw, confirmPsw string) (uint, error)
+	Create(ctx context.Context, name, email, authKey string) (uint, error)
 }
 
 type userService struct {
@@ -25,9 +26,17 @@ func NewUserService(repository repositories.IUserRepository, hasher hash.Hasher)
 	return &userService{repository, hasher}
 }
 
-func (u *userService) Create(ctx context.Context, name, email, psw, confirmPsw string) (uint, error) {
-	if psw != confirmPsw {
-		return 0, cerrors.UnprocessableError("passwords do not match")
+func (u *userService) Create(ctx context.Context, name, email, authKey string) (uint, error) {
+	if utils.IsBlank(name) {
+		return 0, cerrors.BadRequestError("name is required")
+	}
+
+	if utils.IsBlank(email) {
+		return 0, cerrors.BadRequestError("email is required")
+	}
+
+	if utils.IsBlank(authKey) {
+		return 0, cerrors.BadRequestError("authKey is required")
 	}
 
 	user, err := u.repository.FindByEmail(ctx, email)
@@ -41,17 +50,10 @@ func (u *userService) Create(ctx context.Context, name, email, psw, confirmPsw s
 		return 0, cerrors.ConflictError("user already exists")
 	}
 
-	hashedPsw, err := u.hasher.HashPsw(psw)
-
-	if err != nil {
-		log.Printf("error while trying to hash password: %v", err.Error())
-		return 0, err
-	}
-
 	newUser := models.User{
-		Name:  name,
-		Email: email,
-		Psw:   hashedPsw,
+		Name:    name,
+		Email:   email,
+		AuthKey: authKey,
 	}
 
 	if err := u.repository.Save(ctx, &newUser); err != nil {

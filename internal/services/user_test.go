@@ -27,18 +27,16 @@ func TestCreateUser(t *testing.T) {
 	ctx := context.TODO()
 	name := "John Doe"
 	email := "jhon@test.com"
-	psw := "123456"
-	confirmPsw := "123456"
+	authKey := "hashed-auth-key"
 
 	t.Run("success", func(t *testing.T) {
 		// given
 		repoMock := &mocks.UserRepositoryMock{}
 		hasherMock := &mocks.HasherMock{}
 
-		newUser := &models.User{Name: name, Email: email, Psw: "hashed-password"}
+		newUser := &models.User{Name: name, Email: email, AuthKey: authKey}
 
 		repoMock.On("FindByEmail", ctx, email).Return(&models.User{}, nil)
-		hasherMock.On("HashPsw", psw).Return("hashed-password", nil)
 		repoMock.On("Save", ctx, newUser).Run(func(args mock.Arguments) {
 			user := args.Get(1).(*models.User)
 			user.ID = uint(1)
@@ -46,7 +44,7 @@ func TestCreateUser(t *testing.T) {
 
 		// when
 		userSvc := &userService{repository: repoMock, hasher: hasherMock}
-		actual, error := userSvc.Create(ctx, name, email, psw, confirmPsw)
+		actual, error := userSvc.Create(ctx, name, email, authKey)
 
 		// then
 		assert.Equal(t, uint(1), actual)
@@ -55,21 +53,6 @@ func TestCreateUser(t *testing.T) {
 		repoMock.AssertExpectations(t)
 		hasherMock.AssertExpectations(t)
 	})
-
-	t.Run("passwords do not match", func(t *testing.T) {
-		// given
-		repoMock := &mocks.UserRepositoryMock{}
-		hasherMock := &mocks.HasherMock{}
-
-		// when
-		userSvc := &userService{repository: repoMock, hasher: hasherMock}
-		actual, error := userSvc.Create(ctx, name, email, psw, "1234567")
-
-		// then
-		assert.Equal(t, uint(0), actual)
-		assert.Equal(t, error, cerrors.UnprocessableError("passwords do not match"))
-	})
-
 	t.Run("user already exists", func(t *testing.T) {
 		// given
 		repoMock := &mocks.UserRepositoryMock{}
@@ -80,7 +63,7 @@ func TestCreateUser(t *testing.T) {
 
 		// when
 		userSvc := &userService{repository: repoMock, hasher: hasherMock}
-		actual, error := userSvc.Create(ctx, name, email, psw, confirmPsw)
+		actual, error := userSvc.Create(ctx, name, email, authKey)
 
 		// then
 		assert.Equal(t, uint(0), actual)
@@ -89,25 +72,16 @@ func TestCreateUser(t *testing.T) {
 
 	testCases := []struct {
 		findError     error
-		hashError     error
 		saveError     error
 		expectedError error
 	}{
 		{
 			findError:     errors.New("error when finding user"),
-			hashError:     nil,
 			saveError:     nil,
 			expectedError: errors.New("error when finding user"),
 		},
 		{
 			findError:     nil,
-			hashError:     errors.New("error when hashing password"),
-			saveError:     nil,
-			expectedError: errors.New("error when hashing password"),
-		},
-		{
-			findError:     nil,
-			hashError:     nil,
 			saveError:     errors.New("error when saving user"),
 			expectedError: errors.New("error when saving user"),
 		},
@@ -120,12 +94,11 @@ func TestCreateUser(t *testing.T) {
 			hasherMock := &mocks.HasherMock{}
 
 			repoMock.On("FindByEmail", ctx, email).Return(&models.User{}, tc.findError)
-			hasherMock.On("HashPsw", psw).Return("", tc.hashError)
 			repoMock.On("Save", ctx, mock.Anything).Return(tc.saveError)
 
 			// when
 			userSvc := &userService{repository: repoMock, hasher: hasherMock}
-			actual, error := userSvc.Create(ctx, name, email, psw, confirmPsw)
+			actual, error := userSvc.Create(ctx, name, email, authKey)
 
 			// then
 			assert.Equal(t, uint(0), actual)
